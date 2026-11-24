@@ -19,6 +19,20 @@ approved specification.
 | U-010 | Finance & Accounting ↔ operating modules | API and event contracts are not defined yet | D-007 | Open, define in specs |
 | U-011 | AI Workforce ↔ platform | The approved APIs, events, workflows and permission model for agents are not defined yet | D-008 | Open, define in specs |
 
+### Raised by D-012 (regional provisioning)
+
+| ID | Area | Unresolved technical decision | Basis | Status |
+|---|---|---|---|---|
+| U-012 | Supported countries | Which countries and jurisdictions are supported at launch, and how fine jurisdiction is (country only, or also state or province, e.g., for GST) | D-012 | Open, needs decision |
+| U-013 | Regional templates | Who writes, legally reviews and maintains regional template content (tax rules, rates, compliance requirements) | D-012 | Open, needs decision |
+| U-014 | Currencies | Four distinct currency concepts must be kept separate: (1) property base/functional currency; (2) accepted guest payment currencies; (3) property financial reporting currency; (4) organization-level consolidated reporting currency. How each is implemented and treated in accounting, and how they relate to each other, are not decided | D-012 | Open, needs decision |
+| U-015 | Legal entity / tax registration | Organization, property, legal entity and tax registration are four distinct concepts. No one-to-one relationship between them may be assumed. The blueprint has no legal-entity concept. How legal entities and tax registrations are represented, and how they relate to organizations and properties, is not decided. No new blueprint module may be introduced | D-012 | Open, needs decision |
+| U-016 | Country or jurisdiction change | Whether the change happens in place with an effective date or by provisioning the property again, and how open folios and accounting periods are handled | D-012 | Open, define in specs |
+| U-017 | Override and lock rules | Which settings properties may override, and which settings lock once a property goes live or records its first financial transaction | D-012 | Open, define in specs |
+| U-018 | Integration credentials | Whether credentials belong to the organization or the property, and where secrets are stored | D-012 | Open, define in specs |
+| U-019 | Template upgrades | How existing properties adopt a new template version (opt-in, review process) | D-012 | Open, define in specs |
+| U-020 | Data residency | Whether some countries require data to be hosted in that country, which would mean regional deployments of the same architecture | D-012 | Open, needs decision |
+
 ## Notes
 - U-004 and U-005 stay unresolved. Do not infer or create the missing capabilities.
 - U-006 keeps the exact transcription "Bill Review & Docking" until it has been visually

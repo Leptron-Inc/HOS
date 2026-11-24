@@ -153,6 +153,10 @@ not a source of requirements [D-004].
 | Security & Compliance | Data Encryption; Audit Logs; GDPR / Local Laws; Backup & Disaster Recovery; Vulnerability Management |
 | Configuration & Settings | Property Configuration; System Settings; Feature Flags; Localization (Multi-language); Theme & Branding |
 
+Regional configuration is per property, with organization-level governance and a defined
+lifecycle. Configuration & Settings, Multi-Tenant Architecture, Security & Compliance and the
+Integration Hub share this responsibility [D-012].
+
 ---
 
 ## 4. Leptron Control Plane (SaaS Operations)
@@ -173,6 +177,10 @@ The text in this layer is small and low-resolution in the image. Items marked
 | Deployments & Versions | Release Management; Version Tracking; Feature Flags |
 | Usage & Analytics | Customer Usage; Module Adoption; third item **[UNRESOLVED]** (U-005) |
 | Resource Monitoring & Business Insights [D-001] | Resource Monitoring; Business Insights |
+
+The Control Plane is the central authority for onboarding and provisioning organizations and
+properties, including selecting each property's country and jurisdiction. Country selection
+changes configuration, not product architecture [D-012].
 
 **Billing & Invoicing** here means Leptron SaaS subscription billing. It is a separate domain
 from HOS hotel financial billing [D-009].

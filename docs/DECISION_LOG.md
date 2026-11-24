@@ -21,6 +21,7 @@ supersedes it.
 | D-009 | 2026-11-24 | Approved | Two separate Billing & Invoicing domains |
 | D-010 | 2026-11-24 | Approved | Two separate Inventory domains |
 | D-011 | 2026-11-24 | Approved | Payment Gateways to Payment Management contract |
+| D-012 | 2026-11-24 | Approved (founder) | Regional provisioning driven by the Control Plane |
 
 ---
 
@@ -76,3 +77,67 @@ supersedes it.
 
 ### D-011: Payment Gateways to Payment Management contract
 **Decision:** The External Ecosystem's Payment Gateways integrate with **Payment Management** through an explicitly documented integration contract. That contract is not defined yet (see U-008 in the open items).
+
+### D-012: Regional provisioning driven by the Control Plane
+**Context:** The founder approved an extra architectural requirement: centralized onboarding and automatic regional adaptation, so one HOS architecture can serve properties in many countries.
+
+**Decision:**
+1. **Centralized onboarding.** The Leptron Control Plane is the central authority for onboarding and provisioning HOS customers. Leptron administrators create organizations and properties, select each property's operating country, and configure its initial regional settings.
+2. **Automatic regional adaptation.** When a property is provisioned, HOS applies the regional configuration for its country and jurisdiction. That configuration covers:
+   - currency and locale defaults
+   - time zone and date formats
+   - tax and accounting configuration
+   - which regional payment providers are available
+   - country-specific integrations
+   - applicable compliance capabilities
+   - language and document formatting
+3. **One architecture everywhere.** Every supported country runs the same application architecture, modules and core business logic. **Country selection changes configuration, not product architecture.**
+4. **Multi-country organizations.** One organization may run properties in several countries. Each property has its own regional configuration, while governance and shared policies stay at organization level where appropriate. Properties in the same organization must not be assumed to share a country, currency, time zone or tax jurisdiction.
+5. **No new product module.** Responsibility is split across existing approved domains as follows.
+
+| Domain (from the blueprint) | Responsibility under D-012 |
+|---|---|
+| Leptron Control Plane: Customer Management, Property Management | Creates organizations and properties, selects country and jurisdiction, starts provisioning |
+| Configuration & Settings: Property Configuration, System Settings, Localization (Multi-language) | Stores and applies organization and property configuration |
+| Multi-Tenant Architecture: Configuration Management | Scopes configuration to the Organization → Property hierarchy |
+| Security & Compliance: GDPR / Local Laws, Audit Logs | Permissions for configuration changes, regulatory controls, audit history |
+| Integration Hub: API Connectors, Integration Logs & Health | Regional provider connections, eligibility, credential setup |
+
+**Configuration levels:**
+
+| Level | Owns |
+|---|---|
+| Organization | Governance and shared policies (for example, role and permission policy, and which settings properties may override). Organization settings do not fix any property's country, currency, time zone or tax jurisdiction. |
+
+**Role and permission policy is only an example.** It is listed above as an example of organization-level governance. It is not an approved requirement for a customizable role-policy engine. HOS owns platform-wide RBAC, permission enforcement and security boundaries. Where organization-level policies are supported, they must operate within those boundaries and must not override platform security.
+| Property | Country and jurisdiction; currency and locale; time zone and date formats; tax and accounting configuration; payment-provider availability; country-specific integrations; compliance capabilities; language and document formatting |
+
+**Provisioning workflow (requirement level; the technical design belongs in engineering specifications):**
+1. A Leptron administrator creates or selects the organization in the Control Plane.
+2. The administrator creates the property and selects its country and jurisdiction.
+3. HOS proposes the **published regional template version** for that jurisdiction.
+4. The administrator reviews the initial regional settings and adjusts them only within the limits the template and organization policy allow.
+5. **Validation before provisioning.** Provisioning is blocked until:
+   - all required settings are complete
+   - settings are consistent with the jurisdiction (for example, a valid currency, time zone and tax configuration)
+   - a published template version exists
+   - the required compliance capabilities are available
+   - organization policy is satisfied
+6. **Provisioning.** HOS creates the property configuration, recording the template version it was derived from.
+7. **Activation.** The configuration becomes effective and is recorded in the audit history.
+8. **Integrations.** Eligible regional integrations are listed but stay **inactive** (see Lifecycle, Integrations).
+
+**Configuration lifecycle:**
+- **Templates and versions.** Regional templates are kept per country and jurisdiction and are versioned. A published version cannot be changed; corrections are published as a new version. A new template version is not applied to existing properties automatically.
+- **Validation.** The pre-provisioning validation also applies to every later configuration change.
+- **Activation and audit.** Every activation and change records:
+  - who made it, and when
+  - the values before and after
+  - the template version
+  - the reason
+- **Controlled changes.** Configuration changes require permission (through Security & Compliance), are validated, and record an effective date.
+- **Historical financial records.** Financial records keep the regional values that applied when they were created, such as currency, tax rules and rates, and time zone. A later configuration change never recalculates or rewrites a posted or closed financial record.
+- **Country or jurisdiction change.** This counts as a controlled change and must never alter historical financial records. How it is carried out is unresolved (U-016).
+- **Integrations.** Country selection only determines which integrations a property is *eligible* for. An integration that needs credentials, a commercial agreement, provider approval or certification is **never activated automatically**. Each one needs its own explicit setup, a successful connection check, and an audited activation.
+
+**Open items raised by this decision:** U-012 to U-020 in [UNRESOLVED_BLUEPRINT_DETAILS.md](blueprint/UNRESOLVED_BLUEPRINT_DETAILS.md).
