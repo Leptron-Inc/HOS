@@ -33,6 +33,13 @@ approved specification.
 | U-019 | Template upgrades | How existing properties adopt a new template version (opt-in, review process) | D-012 | Open, define in specs |
 | U-020 | Data residency | Whether some countries require data to be hosted in that country, which would mean regional deployments of the same architecture | D-012 | Open, needs decision |
 
+### Raised by D-013 (scalability and capacity)
+
+| ID | Area | Unresolved technical decision | Basis | Status |
+|---|---|---|---|---|
+| U-021 | Capacity targets and SLOs | Measurable service-level objectives (availability, latency, throughput) and initial capacity targets per cell. These must be set from workload assumptions and confirmed by load testing. No fixed hotel-size assumption may be used | D-013 | Open, needs decision |
+| U-022 | Commercial entitlements | Whether any entitlements are sold, what they cover, how they are measured, and how they appear to customers. They must stay distinguishable from capacity targets and safeguards | D-013 | Open, needs decision |
+
 ## Notes
 - U-004 and U-005 stay unresolved. Do not infer or create the missing capabilities.
 - U-006 keeps the exact transcription "Bill Review & Docking" until it has been visually

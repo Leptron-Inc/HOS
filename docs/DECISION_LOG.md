@@ -22,6 +22,7 @@ supersedes it.
 | D-010 | 2026-11-24 | Approved | Two separate Inventory domains |
 | D-011 | 2026-11-24 | Approved | Payment Gateways to Payment Management contract |
 | D-012 | 2026-11-24 | Approved (founder) | Regional provisioning driven by the Control Plane |
+| D-013 | 2026-11-25 | Approved (founder) | Global scalability and capacity requirement |
 
 ---
 
@@ -141,3 +142,35 @@ supersedes it.
 - **Integrations.** Country selection only determines which integrations a property is *eligible* for. An integration that needs credentials, a commercial agreement, provider approval or certification is **never activated automatically**. Each one needs its own explicit setup, a successful connection check, and an audited activation.
 
 **Open items raised by this decision:** U-012 to U-020 in [UNRESOLVED_BLUEPRINT_DETAILS.md](blueprint/UNRESOLVED_BLUEPRINT_DETAILS.md).
+
+### D-013: Global scalability and capacity requirement
+**Context:** The founder clarified that HOS must not impose arbitrary fixed capacity limits on customer operations.
+
+**Decision:** HOS supports hotels and hotel groups according to their actual operational requirements, whatever the number of rooms, properties, users, departments, guests, reservations, transactions, documents or integrations. A small hotel and a large international hotel group use the same global HOS product architecture.
+
+**Engineering requirements:**
+1. **No hard-coded ceilings.** Application logic contains no hard-coded commercial or technical ceilings for rooms, properties, users, departments, guests or operational records.
+2. **Large datasets.** The database design supports large datasets, with appropriate indexing, partitioning where justified, and efficient queries.
+3. **Independent scaling.** Application services and background workers can scale independently where appropriate.
+4. **Storage growth.** Storage and document management support growth without fixed storage assumptions in the application.
+5. **Measured capacity management.** Capacity is managed from measured workload, resource monitoring and performance testing.
+6. **Cells and dedicated infrastructure.** Regional cells and dedicated customer infrastructure may be introduced when workload, isolation, data residency or contractual requirements justify them.
+7. **Safe scaling and migration.** Scaling and migration preserve tenant isolation, financial integrity, audit history and operational continuity.
+8. **Commercial entitlements are separate.** The Leptron Control Plane may enforce entitlements a customer has explicitly purchased. These must be distinguishable from infrastructure and architectural capacity limits in data, enforcement and user-facing messages.
+9. **Transparency.** HOS communicates capacity constraints and scaling requirements transparently. It does not silently reject legitimate business growth.
+
+**What this decision does not claim:** HOS does not claim infinite capacity or unlimited performance. Measurable capacity targets come from load testing, service-level objectives (SLOs) and infrastructure sizing. Those targets are engineering and operational limits, not product restrictions, and they are reviewed as measured workload changes. No fixed hotel size, property count or room limit is assumed.
+
+**Three kinds of limit:**
+
+| Kind | Source | Example of how it is handled |
+|---|---|---|
+| Commercial entitlement | Explicitly purchased plan, enforced by the Control Plane | Shown to the customer as a plan limit, with an upgrade path |
+| Operational capacity target | Load testing, SLOs, infrastructure sizing | Monitored; when approached, triggers a scaling action (vertical, horizontal, new cell or dedicated infrastructure) |
+| Protective safeguard (e.g., per-request page size, API rate limit, upload size per request) | Abuse protection and system stability | Documented, configurable, and never a ceiling on total customer volume |
+
+**Relationship to other decisions:**
+- **D-012:** applies to all regional provisioning.
+- **Global architecture and regional cell strategy:** the technical architecture review (2026-11-24) proposes a modular monolith, a separate Control Plane and cells starting with one cell. That proposal is **pending founder approval and is not yet recorded here.** When it is approved, it must satisfy D-013. In particular, a cell's capacity must be a measured, monitored target, and a tenant outgrowing a cell must be handled by scaling or migration, not rejection.
+
+**Open items raised by this decision:** U-021 and U-022 in [UNRESOLVED_BLUEPRINT_DETAILS.md](blueprint/UNRESOLVED_BLUEPRINT_DETAILS.md).
