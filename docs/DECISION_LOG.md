@@ -23,6 +23,18 @@ supersedes it.
 | D-011 | 2026-11-24 | Approved | Payment Gateways to Payment Management contract |
 | D-012 | 2026-11-24 | Approved (founder) | Regional provisioning driven by the Control Plane |
 | D-013 | 2026-11-25 | Approved (founder) | Global scalability and capacity requirement |
+| D-014 | 2026-11-25 | Approved (founder) | Modular monolith with a separate Control Plane |
+| D-015 | 2026-11-25 | Approved (founder) | TypeScript, NestJS, React and Vite |
+| D-016 | 2026-11-25 | Approved (founder) | PostgreSQL on AWS RDS, standard features only |
+| D-017 | 2026-11-25 | Approved (founder) | Shared database per cell with row-level security |
+| D-018 | 2026-11-25 | Approved (founder) | Transactional outbox and SQS, at-least-once delivery |
+| D-019 | 2026-11-25 | Approved (founder) | Regional cell architecture, starting with one cell |
+| D-020 | 2026-11-25 | Approved (founder) | Strict Control Plane data allowlist |
+| D-021 | 2026-11-25 | Approved (founder) | Four identity realms; HOS owns authorization |
+| D-022 | 2026-11-25 | Approved (founder) | No raw card numbers in HOS |
+| D-023 | 2026-11-25 | Approved (founder) | OpenTofu and GitHub Actions |
+| D-024 | 2026-11-25 | Approved (founder) | Lean, cost-conscious development environment |
+| D-025 | 2026-11-25 | Approved (founder) | AWS-only infrastructure and spending policy |
 
 ---
 
@@ -174,3 +186,87 @@ supersedes it.
 - **Global architecture and regional cell strategy:** the technical architecture review (2026-11-24) proposes a modular monolith, a separate Control Plane and cells starting with one cell. That proposal is **pending founder approval and is not yet recorded here.** When it is approved, it must satisfy D-013. In particular, a cell's capacity must be a measured, monitored target, and a tenant outgrowing a cell must be handled by scaling or migration, not rejection.
 
 **Open items raised by this decision:** U-021 and U-022 in [UNRESOLVED_BLUEPRINT_DETAILS.md](blueprint/UNRESOLVED_BLUEPRINT_DETAILS.md).
+
+---
+
+## Technical architecture decisions (D-014 to D-025)
+
+The founder approved these on 2026-11-25. Design detail, plus recommendations that are **not** approved, is in [architecture/TECHNICAL_ARCHITECTURE.md](architecture/TECHNICAL_ARCHITECTURE.md). Where D-013 refers to the global architecture and cell strategy as "pending founder approval", those are now approved as D-014 and D-019. D-013 itself is unchanged.
+
+### D-014: Modular monolith with a separate Control Plane
+**Decision:** Hotel operations are built as a modular monolith: one codebase deployed as an API service and background workers. The Leptron Control Plane is a separate application with its own database.
+**Constraints:**
+- Each blueprint module owns its own data.
+- Modules interact only through public interfaces and events (D-007, D-008).
+- The API service and workers scale independently (D-013).
+
+### D-015: TypeScript, NestJS, React and Vite
+**Decision:** TypeScript is the primary language. The backend uses NestJS. Staff and admin frontends use React built with Vite.
+**Not decided by this entry:** the guest application approach (PWA or native), and the framework for the public booking site.
+
+### D-016: PostgreSQL on AWS RDS, standard features only
+**Decision:** PostgreSQL hosted on Amazon RDS, using standard PostgreSQL features, so the data layer is not tied to one provider's proprietary extensions.
+**Not decided by this entry:** instance sizing, Multi-AZ timing and actual spend (D-025).
+
+### D-017: Shared database per cell with row-level security
+**Decision:**
+- Each cell uses one shared database for its tenants.
+- All tenant data is tenant-scoped (organization, and property where applicable).
+- PostgreSQL row-level security is a database-level isolation layer underneath application authorization.
+- Automated isolation tests are mandatory.
+
+**Constraints:**
+- Department is a permission and assignment scope, not a data partition.
+- Organization, property, legal entity and tax registration stay distinct concepts (U-015).
+
+### D-018: Transactional outbox and SQS, at-least-once delivery
+**Decision:**
+- Domain events are written to a transactional outbox in the same transaction as the business change, then delivered through AWS SQS.
+- Delivery is **at least once**. Every consumer processes events idempotently.
+- The goal is exactly-once **business effects**. Delivery itself is never claimed to be exactly once.
+
+**Constraint:** external side effects (payments, messages, channel updates) need provider idempotency keys where the provider supports them, or reconciliation where it doesn't.
+
+### D-019: Regional cell architecture, starting with one cell
+**Decision:**
+- HOS runs as regional cells, each a full deployment of the same hotel-operations application, under one global Control Plane.
+- Launch uses **one cell**.
+- More cells or dedicated customer infrastructure are added only when D-013 justifies them (workload, isolation, data residency, contract).
+
+**Not decided by this entry:** the initial production region (U-012, U-020).
+
+### D-020: Strict Control Plane data allowlist
+**Decision:**
+- The Control Plane holds only allowlisted organization, property, subscription, entitlement, provisioning and aggregated telemetry data.
+- **Hotel operational data and guest data stay in HOS cells.**
+- The Control Plane provisions cells through a versioned provisioning API and never writes to a cell's database.
+
+### D-021: Four identity realms; HOS owns authorization
+**Decision:** There are four separate identity realms:
+1. Leptron employees
+2. hotel employees
+3. guests
+4. machines and AI agents
+
+HOS owns authorization and RBAC. The identity provider only authenticates.
+
+**Not decided by this entry:** which identity provider (see Open decisions in the architecture document).
+
+### D-022: No raw card numbers in HOS
+**Decision:** HOS does not store or process raw card numbers. Card data is handled by payment providers, through tokenization and hosted fields or redirects (D-011).
+
+### D-023: OpenTofu and GitHub Actions
+**Decision:** Infrastructure is defined as code with OpenTofu. CI/CD runs on GitHub Actions.
+**Constraint:** CI usage must stay within D-025.
+
+### D-024: Lean, cost-conscious development environment
+**Decision:** The development environment is kept to the minimum needed for engineering and is cost-conscious by design. Engineering that doesn't need AWS runs locally or in CI.
+**Constraint:** any AWS resource still requires approval under D-025.
+
+### D-025: AWS-only infrastructure and spending policy
+**Decision:**
+- **AWS is the exclusive cloud infrastructure direction.** There is no Supabase infrastructure dependency.
+- The available AWS credits are **USD 10,000**, and they are to be used carefully.
+- **No additional out-of-pocket infrastructure spending** is allowed before a suitable client is secured, unless the founder separately approves it.
+- After the credits are used up, infrastructure grows gradually, funded by customer revenue or separately approved funding.
+- **No AWS resource may be created and no paid charge incurred without explicit founder approval.** This applies to every environment.
