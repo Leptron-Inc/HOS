@@ -14,11 +14,15 @@ Supporting documentation:
 - docs/blueprint/UNRESOLVED_BLUEPRINT_DETAILS.md
 - docs/DECISION_LOG.md
 - docs/architecture/TECHNICAL_ARCHITECTURE.md
+- docs/architecture/HOS_MODULE_MAP.md (approved module map: 46 modules, MM-01 to MM-16, tiers)
+- docs/architecture/TENANCY_AND_DATA_CONVENTIONS.md (approved implementation baseline, revision 2.1)
 - CURRENT_STATE.md
 
 These references govern product scope and approved architectural decisions. In
 TECHNICAL_ARCHITECTURE.md, only items labelled "Approved" are binding; "Recommended" items
-are not approved.
+are not approved. In the module map, items marked "proposed" become binding only through their
+specifications. In the tenancy specification, the §11 tooling choices are provisional and not
+approved.
 
 ## Infrastructure Spending
 

@@ -1,0 +1,200 @@
+PostgreSQL validation harness, bootstrap mode: rds-emulated
+Run: 2026-11-26T01:40:42
+Server: PostgreSQL 18.4 on x86_64-windows, compiled by msvc-19.44.35227, 64-bit
+
+Bootstrap administrator: rds_sim (rds-emulated)
+Extracted: 11 blocks (01,02,03,04,05,06,07,08,09,10,11), session preamble: True, statements: 7
+
+=== Execution steps ===
+[exit 0] reset
+[exit 0] block 01 [cluster-admin] bootstrap roles and memberships
+[exit 0] block 02 [database-admin] database privileges and schemas
+[exit 0] block 03 [migration] platform privileges and context functions
+[exit 0] block 04 [migration] migration helpers and the history guard
+[exit 0] block 05 [migration] P1 organization, property and department tables
+[exit 0] block 06 [migration] P1 department history (non-sensitive example)
+[exit 0] block 07 [migration] P1 pre-tenant lookup functions
+[exit 0] block 08 [migration] illustrative P2 identity tables and P2 pre-tenant lookups
+[exit 0] block 09 [migration] illustrative O2 department-scoped tables and an idempotency store
+[exit 0] block 10 [migration] illustrative B3 guest profile with sensitive, erasable history
+[exit 0] block 11 [migration] currency reference and an illustrative posting table
+[exit 0] prepare statements (as hos_api)
+[exit 0] fixtures (admin; tenant rows via hos_api)
+[exit 0] tests_admin (admin with SET ROLE)
+[exit 0] tests_api (login hos_api)
+[exit 0] tests_migrator (login hos_migrator)
+[exit 0] concurrency dept (two hos_api sessions)
+[exit 0] concurrency idem_commit (two hos_api sessions)
+[exit 0] concurrency idem_rollback (two hos_api sessions)
+[exit 0] concurrency idem_timeout (two hos_api sessions)
+
+=== Test results ===
+PASS | H-ISO-01 OrgA context sees no OrgB departments
+PASS | H-ISO-01 OrgA context sees its 3 departments
+PASS | H-ISO-01 OrgA context sees its 2 properties
+PASS | H-ISO-01 OrgA context sees only its organization row
+PASS | H-ISO-02 insert for OrgB under OrgA context rejected
+PASS | H-ISO-03 update of an OrgB row under OrgA context affects 0 rows
+PASS | H-ISO-04 composite FK to an OrgB parent rejected
+PASS | H-PROP-04 organization-wide scope sees A1 and A2 departments
+PASS | H-PROP-02 listed scope [A1] sees only A1 departments
+PASS | H-PROP-03 listed scope [A1] cannot select an A2 row by ID
+PASS | H-PROP-05 insert of an A2 row under scope [A1] rejected
+PASS | H-ISO-05 both organizations use department code HK without conflict
+PASS | H-FK-01 A1 note referencing an A2 task rejected (same-property FK)
+PASS | H-FK-06 A1 note referencing an A1 task accepted
+PASS | H-FK-02 A1 task with an A2 department rejected
+PASS | H-FK-03 department scope without property scope rejected (CHECK)
+PASS | H-FK-04 OrgA assignment scoped to an OrgB property rejected
+PASS | H-DEPT-04 assignment with an A1 department under an A2 property scope rejected
+PASS | H-FK-06 valid department-scoped assignment accepted
+PASS | H-FK-05 every FK between tenant tables includes organization_id (and property_id property-to-property)
+PASS | H-DEPT-03 no policy references department_id
+PASS | H-LOOK-01 property_status(OrgA, A1) = active
+PASS | H-LOOK-01 organization_status(OrgA) = active
+PASS | H-LOOK-02 property of another organization = not_found
+PASS | H-LOOK-02 unknown property = not_found
+PASS | H-LOOK-03 direct read of tenant_property without context fails closed
+PASS | H-LOOK-06 resolve_principal returns the OrgA user
+PASS | H-LOOK-06 resolve_principal is limited to the named organization
+PASS | H-LOOK-06 list_memberships returns both organizations for the subject
+PASS | H-LOOK-05 lookup role cannot read display_name
+PASS | H-LOOK-05 lookup role cannot insert
+PASS | H-LOOK-05 lookup role reads only its granted columns, across tenants
+PASS | H-DEF-01 exactly the 8 allowlisted SECURITY DEFINER functions exist
+PASS | H-DEF-01 definer functions: kernel schema, designated owner, fixed search_path
+PASS | H-DEF-02 no HOS function or procedure is executable by PUBLIC
+PASS | H-DEF-03 hos_api cannot execute the erasure function
+PASS | H-DEF-03 hos_worker can execute the erasure function
+PASS | H-DEF-03 hos_api cannot execute migration helpers
+PASS | H-DEF-04 no definer function is LEAKPROOF
+PASS | H-DEF-05 no plpgsql definer function uses dynamic EXECUTE
+PASS | H-MIG-01 tenant tables without forced RLS
+PASS | H-MIG-01 tenant_organization has forced RLS
+PASS | H-MIG-02 every policy is on the C-09 allowlist
+PASS | H-MIG-02 every tenant table has a tenant_isolation policy
+PASS | H-MIG-03 no hos_ role is superuser or BYPASSRLS
+PASS | H-MIG-03 login and runtime roles own no objects
+PASS | H-MIG-03 no PUBLIC privileges on HOS tables, schemas or the database
+PASS | H-MIG-03 no views without security_invoker, no materialized views
+PASS | H-MIG-08 every FK (except to global_reference) has a matching leading index
+PASS | H-MIG-08 tenant secondary indexes lead with organization_id (except the listed lookup index)
+PASS | H-MIG-09 hos_migrator -> hos_owner is INHERIT FALSE, SET TRUE
+PASS | H-MIG-09 hos_migrator -> each definer owner role is INHERIT FALSE, SET TRUE
+PASS | H-MIG-09 no role except hos_migrator can inherit or SET to hos_owner or a definer role
+PASS | H-MIG-09 the only other membership rows in those roles are the bootstrap administrator's ADMIN-only rows
+PASS | H-MIG-17 bootstrap administrator keeps no INHERIT or SET membership in any HOS role (temporary SET removed)
+PASS | H-MIG-17 bootstrap administrator: rds_sim, superuser=false, ADMIN-only rows=11
+PASS | H-MIG-09 hos_migrator holds no inherited membership at all
+PASS | H-MIG-09 runtime login roles are members of hos_app only
+PASS | H-MIG-09 owner roles cannot log in
+PASS | H-MIG-11 objects in HOS schemas owned by hos_owner (definer functions by their owner role)
+PASS | H-MIG-13 every history table has enabled guard and no-truncate triggers
+PASS | H-MIG-13 every base table of a history table has an enabled capture_version trigger
+PASS | H-HIST-01 three history versions for a department inserted and updated twice
+PASS | H-HIST-02 hos_api cannot insert history
+PASS | H-HIST-03 hos_api cannot update history
+PASS | H-HIST-03 hos_api cannot delete history
+PASS | H-HIST-04 update without a version increment fails
+PASS | H-HIST-05 hos_api cannot select the sensitive history column
+PASS | H-HIST-05 hos_api can select non-sensitive history columns
+PASS | H-HIST-06 sensitive read in own tenant returns the value
+PASS | H-HIST-07 hos_api cannot execute the erasure function
+PASS | H-HIST-06 sensitive read from another tenant returns nothing
+PASS | H-HIST-09 history writer cannot insert a row for another tenant
+PASS | H-HIST-07 hos_worker erases the guest history (1 version)
+PASS | H-HIST-07 a second erasure changes nothing
+PASS | H-HIST-10 erased version shows NULL values and a tombstone
+PASS | H-HIST-10 sensitive read of an erased version returns NULL and the reason
+PASS | H-HIST-08 guard rejects changing a history value (direct DML)
+PASS | H-HIST-08 guard rejects an erasure that keeps an erasable value
+PASS | H-HIST-08 guard rejects changing a non-erasable column during erasure
+PASS | H-HIST-08 guard rejects re-erasing an erased version
+PASS | H-HIST-08 guard rejects DELETE (direct DML)
+PASS | H-HIST-08 guard rejects TRUNCATE (direct DML)
+PASS | H-HIST-11 LIMITATION: superuser with session_replication_role=replica changes history; guard does not fire
+PASS | H-HIST-11 the bypass test was rolled back (history value unchanged)
+PASS | H-IDEM-01 new key acquired (one row)
+PASS | H-IDEM-02 response stored
+PASS | H-IDEM-02 unexpired key not re-acquired (no row)
+PASS | H-IDEM-02 lookup returns the stored response for replay
+PASS | H-IDEM-03 expired record is not returned by lookup
+PASS | H-IDEM-03 expired record is replaced (one row)
+PASS | H-IDEM-08 same key in OrgB is independent (one row)
+PASS | H-IDEM-07 purge deletes the expired OrgA record
+PASS | H-IDEM-07 expired OrgB record untouched by an OrgA purge
+PASS | H-IDEM-07 hos_api cannot delete idempotency records
+PASS | H-DEPT-06 reassignment committed first (one row)
+PASS | H-DEPT-06 completion with the old department and version affects 0 rows
+PASS | H-DEPT-07 reassignment to another property's department rejected
+PASS | H-FIN-08 USD 1.234 rejected (CHECK)
+PASS | H-FIN-08 JPY 100.5 rejected (CHECK)
+PASS | H-FIN-08 KWD 1.234 accepted
+PASS | H-FIN-08 USD with minor unit 3 rejected (FK)
+PASS | H-FIN-09 amount with 35 integer digits rejected, not truncated
+PASS | H-FIN-10 largest numeric(38,4) CLF amount accepted
+PASS | H-FIN-10 largest amount reads back exactly
+PASS | H-FIN-13 postings are append-only for hos_api
+PASS | H-TIME-07 posting without its time zone rejected
+PASS | H-TIME-07 posting without its configuration version rejected
+PASS | H-TIME-07 posting without its tzdb version rejected
+PASS | H-TIME-08 stored provenance cannot be updated by hos_api
+PASS | H-TIME-01 20:00Z on 2026-11-26 is 2026-11-27 in Asia/Kolkata
+PASS | H-TIME-01 the same instant is 2026-11-26 in America/New_York
+PASS | H-TIME-05 +14:00 zone (Pacific/Kiritimati)
+PASS | H-TIME-05 -11:00 zone (Pacific/Pago_Pago)
+PASS | H-FIN-14 a second current row for one currency code rejected
+PASS | H-TIME-06 hos_api session time zone is UTC
+PASS | H-LOOK-04 session_user is hos_api
+PASS | H-LOOK-04 hos_api cannot SET ROLE hos_lookup_tenant
+PASS | H-LOOK-04 hos_api cannot SET ROLE hos_history_eraser
+PASS | H-LOOK-04 hos_api cannot SET ROLE hos_owner
+PASS | H-MIG-14 the migration preamble fails for hos_api (SET ROLE hos_owner refused)
+PASS | H-LOOK-07 hos_api cannot create a temporary table
+PASS | H-LOOK-07 hos_api cannot create a table in app
+PASS | H-LOOK-07 hos_api cannot create a function in kernel
+PASS | H-LOOK-07 hos_api cannot create anything in public
+PASS | H-HIST-13 hos_api cannot set session_replication_role
+PASS | H-HIST-13 hos_api cannot disable the history guard
+PASS | H-HIST-13 hos_api cannot drop the history guard
+PASS | H-DEF-03 hos_api cannot call the migration helper
+PASS | H-CTX-01 tenant query with no context fails closed (42501)
+PASS | H-POOL-01 inside the transaction OrgA rows are visible
+PASS | H-POOL-01 context setting is empty after COMMIT
+PASS | H-POOL-01 the next query on the same connection fails closed
+PASS | H-POOL-01 a transaction-local setting outside an explicit transaction does not persist
+PASS | H-POOL-02 after a failed OrgA transaction, an OrgB transaction sees only OrgB
+PASS | H-POOL-02 OrgB sees its own property
+PASS | H-TIME-06 hos_migrator session time zone is UTC
+PASS | H-MIG-10 without SET ROLE, hos_migrator cannot create a table in app
+PASS | H-MIG-10 hos_migrator inherits no CREATE privilege on app
+PASS | H-HIST-13 hos_migrator cannot set session_replication_role
+PASS | H-MIG-10 after SET ROLE, current_user is hos_owner
+PASS | H-HIST-13 hos_owner cannot set session_replication_role
+PASS | H-MIG-16 hos_owner has no membership in definer roles
+PASS | H-MIG-16 hos_migrator has SET but not USAGE (no inherited privileges) on definer roles
+PASS | H-MIG-16 with current role hos_owner, SET ROLE hos_history_writer succeeds (checked against session user hos_migrator)
+PASS | H-HIST-12 LIMITATION: the table owner (via migration) can disable the history guard
+PASS | H-HIST-12 the H-MIG-13 catalog check detects the disabled guard
+PASS | H-HIST-12 after rollback the guard is enabled again
+PASS | H-MIG-12 owner UPDATE on a tenant table silently affects 0 rows
+PASS | H-MIG-12 owner sees no tenant rows
+PASS | H-MIG-15 hos_owner alone cannot replace a definer function
+PASS | H-MIG-15 the migrator, switched to the designated owner, can replace it
+PASS | H-MIG-15 after replacement the owner is still hos_lookup_tenant
+PASS | H-MIG-15 after replacement PUBLIC still cannot execute it
+PASS | H-MIG-14 session preamble run as hos_api is refused (psql exit 3)
+PASS | H-DEPT-05 session 1 completes the task it locked (one row)
+PASS | H-DEPT-05 concurrent reassignment affects 0 rows after the lock is released
+PASS | H-DEPT-05 the reassignment waited for the lock
+PASS | H-IDEM-04 session 1 acquires the key
+PASS | H-IDEM-04 session 2 gets no row once session 1 commits
+PASS | H-IDEM-04 session 2 waited for session 1
+PASS | H-IDEM-04 session 2 finds session 1's committed response
+PASS | H-IDEM-05 after session 1 rolls back, session 2 owns the key
+PASS | H-IDEM-05 session 2 waited for session 1
+PASS | H-IDEM-06 a waiting request times out with 55P03 (idempotency_in_progress)
+
+SUMMARY: steps=21 (failed 0); tests passed=165 failed=0
+
+HARNESS EXIT CODE: 0
