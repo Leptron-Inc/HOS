@@ -1,0 +1,7 @@
+# Approved documentation and evidence are never reformatted.
+*.md
+docs/
+pnpm-lock.yaml
+dist/
+coverage/
+.turbo/

@@ -1,0 +1,12 @@
+# Store and check out every text file with LF line endings, on every platform, regardless of a
+# developer's core.autocrlf setting. Prettier and .editorconfig both expect LF.
+* text=auto eol=lf
+
+# Binary files: never converted.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary

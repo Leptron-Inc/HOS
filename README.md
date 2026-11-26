@@ -21,3 +21,30 @@ HOS (HospitalityOS) is a global hotel operating system by Leptron. Hotels and ho
 | [docs/architecture/validation/tenancy-2.1-sql-harness/](docs/architecture/validation/tenancy-2.1-sql-harness/README.md) | The SQL validation harness and run logs for that specification |
 
 If documents conflict, the blueprint and the decision log take precedence.
+
+## Development
+
+**Prerequisites:** Node.js 26.13.1 (see `.nvmrc`), pnpm 12.23.0, and a PostgreSQL database you can use for development.
+
+| Workspace | Purpose |
+|---|---|
+| `apps/api` | NestJS API (liveness and readiness endpoints, validated configuration, database kernel) |
+| `apps/web` | React + Vite web application shell |
+| `packages/shared` | Contracts shared by the applications (no business logic) |
+| `packages/config` | Shared TypeScript, ESLint and Prettier configuration |
+
+```sh
+pnpm install
+
+# API: copy apps/api/.env.example to apps/api/.env and set NODE_ENV and DATABASE_URL, then:
+pnpm --filter @hos/api dev        # http://127.0.0.1:3000/health/live and /health/ready
+
+# Web (proxies /api to the API):
+pnpm --filter @hos/web dev        # http://localhost:5173
+
+# Checks (the same steps CI runs):
+pnpm format:check && pnpm lint && pnpm typecheck && pnpm build && pnpm depcruise && pnpm test
+DATABASE_URL=postgres://USER@HOST:5432/DATABASE pnpm test:integration   # disposable database only
+```
+
+Built output: `pnpm build`, then `pnpm --filter @hos/api start` (reads only real environment variables, never `.env`) or `pnpm --filter @hos/api start:local` (reads `apps/api/.env`). `pnpm --filter @hos/web preview` serves the built web app for local checking only; Vite's preview server is not a production web server, and production hosting is not decided yet.

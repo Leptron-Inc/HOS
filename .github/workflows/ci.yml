@@ -1,0 +1,95 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# Cancel superseded pull-request runs to save free Actions minutes (D-025). Runs on main are
+# never cancelled, so every commit on main gets a complete CI result.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  ci:
+    name: Install, lint, typecheck, build, test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      TURBO_TELEMETRY_DISABLED: '1'
+      DO_NOT_TRACK: '1'
+    services:
+      # Disposable PostgreSQL for integration tests only. Trust authentication: no credential
+      # exists, and the container is reachable only from this job.
+      postgres:
+        image: postgres:18.7
+        env:
+          POSTGRES_USER: hos_ci
+          POSTGRES_DB: hos_ci
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U hos_ci -d hos_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js (version from .nvmrc)
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+
+      - name: Install pnpm (exact version)
+        run: npm install --global pnpm@12.23.0
+
+      - name: Locate the pnpm store
+        run: echo "PNPM_STORE_PATH=$(pnpm store path --silent)" >> "$GITHUB_ENV"
+
+      - name: Cache the pnpm store
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.PNPM_STORE_PATH }}
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-store-${{ runner.os }}-
+
+      - name: Install dependencies (lockfile must be up to date)
+        run: pnpm install --frozen-lockfile
+
+      - name: Check formatting
+        run: pnpm format:check
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Build
+        run: pnpm build
+
+      - name: Check module boundaries
+        run: pnpm depcruise
+
+      - name: Migration lint (G-16, G-08)
+        run: pnpm --filter @hos/api db:lint
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: 'Integration tests (real PostgreSQL: bootstrap, migrations, RLS, tenancy, all modules)'
+        run: pnpm test:integration
+        env:
+          # Administrator of the disposable CI PostgreSQL service: each run creates and drops its own database.
+          HOS_TEST_ADMIN_URL: postgres://hos_ci@localhost:5432/hos_ci

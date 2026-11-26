@@ -1,0 +1,73 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "globalDependencies": [
+    "eslint.config.js",
+    ".prettierignore",
+    ".dependency-cruiser.cjs",
+    ".editorconfig",
+    ".nvmrc",
+    "packages/config/**"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"],
+      "env": ["VITE_*"]
+    },
+    "typecheck": {
+      "dependsOn": ["^build"]
+    },
+    "lint": {
+      "dependsOn": ["^build"]
+    },
+    "test": {
+      "dependsOn": ["^build"]
+    },
+    "test:integration": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "env": ["HOS_TEST_ADMIN_URL"]
+    },
+    "dev": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "persistent": true,
+      "passThroughEnv": [
+        "NODE_ENV",
+        "PORT",
+        "HOST",
+        "DATABASE_URL",
+        "DB_POOL_MAX",
+        "DB_CONNECT_TIMEOUT_MS",
+        "DB_STATEMENT_TIMEOUT_MS",
+        "DB_HEALTH_TIMEOUT_MS",
+        "HEALTH_CACHE_TTL_MS",
+        "HOS_BUILD_VERSION",
+        "SECLOG_DATABASE_URL",
+        "WORKER_DATABASE_URL",
+        "RELAY_DATABASE_URL",
+        "MONITOR_DATABASE_URL",
+        "DB_LOCK_TIMEOUT_MS",
+        "HOS_CELL_ID",
+        "LOG_LEVEL",
+        "HOS_IDENTITY_ISSUERS",
+        "HOS_PROVISIONING_ISSUER",
+        "HOS_PROVISIONING_SUBJECT",
+        "IAM_GRANTS_CACHE_TTL_MS",
+        "RATE_LIMIT_PER_MINUTE",
+        "HTTP_BODY_LIMIT_BYTES",
+        "SECLOG_AGGREGATION_WINDOW_MS",
+        "OPS_PORT",
+        "OPS_HOST",
+        "HOS_LOCAL_SECRETS_DIR",
+        "HOS_LOCAL_SECRETS_KEY",
+        "HOS_DOCUMENT_STORAGE_DIR",
+        "HOS_DOCUMENT_ENCRYPTION_KEY",
+        "INTEGRATION_ALLOW_INSECURE_HTTP",
+        "DOCUMENT_MAX_BYTES",
+        "HOS_API_PROXY_TARGET",
+        "VITE_API_BASE_URL"
+      ]
+    }
+  }
+}

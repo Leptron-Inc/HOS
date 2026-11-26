@@ -1,0 +1,11 @@
+packages:
+  - 'apps/*'
+  - 'packages/*'
+
+# Refuse to install with a Node.js version outside "engines" (root package.json).
+engineStrict: true
+
+# pnpm 12 denies dependency build scripts unless explicitly allowed. Listed packages are
+# explicitly NOT allowed to run install scripts; their prebuilt binaries are used instead.
+allowBuilds:
+  '@swc/core': false
